@@ -1,0 +1,45 @@
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.App-header {
+  text-align: center;
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: greenyellow;
+}
+
+.App-link {
+  color: greenyellow;
+}
+
+.font-saraban {
+  font-family: Sarabun, sans-serif;
+}
+
+.font-saraban body {
+  font-family: Sarabun, sans-serif;
+}
+
+
+@media print {
+  .navbar {
+    display: none;
+  }
+
+  .btnprint {
+    display: none;
+  }
+
+}
+
+@keyframes example {
+  0%   {transform: rotate(0deg);}
+  100% {transform: rotate(360deg);}
+}
