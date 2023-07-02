@@ -21,6 +21,7 @@ import FillWarrant from './components/fillcomponents/fillwarrantservice.componen
 import ViewSocialser from './components/subcomponents/view_ss.component';
 import FillWitness from './components/fillcomponents/fillwitness.component';
 import FillDrivingLi from './components/fillcomponents/filldriving_li.component';
+import FillVen from './components/fillcomponents/fillven.component';
 
 import UserVocation from './components/UserVocation.component';
 import UserVocationSt from './components/UserVocationSt.component';
@@ -62,6 +63,7 @@ function App() {
         <Route path="/uservocation" element={<UserVocation />} />
         <Route path="/uservocation_st" element={<UserVocationSt />} />
         <Route path="/caseECMS" element={<CaseECMS />} />
+        <Route path="/fillven" element={<FillVen />} />
         <Route path="/paper" element={<Paper />} />
         <Route path="*" element={<NoPage />} />
       </Route>

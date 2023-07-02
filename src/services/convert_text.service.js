@@ -24,9 +24,19 @@ export function convertDate(dateString) {
     };
   
     const formattedTime = date.toLocaleTimeString('th-TH', options2);
+
+    const options3 = {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    };
   
+    const formattedweekDate = date.toLocaleDateString('th-TH', options3);
+
     return {
       date: formattedDate,
+      week: formattedweekDate,
       time: formattedTime
     };
 }

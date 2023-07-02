@@ -51,6 +51,7 @@ const Menu = () => {
                 <NavDropdown.Divider />
                 <NavDropdown.Item as={Link} to="/uservocation"> - ระบบบันทึกใบลา </NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/listup"> - ระบบบันทึกรหัสผู้ใช้ </NavDropdown.Item>
+                <NavDropdown.Item as={Link} to="/fillven"> - รายการเวรประจำตัว </NavDropdown.Item>
              </NavDropdown>
             )}
             { (showOper || showAdmin) && (
