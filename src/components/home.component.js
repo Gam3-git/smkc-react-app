@@ -7,7 +7,7 @@ const Home = () =>  {
     <> 
     
       <div className="col-12 mt-3">
-        <h1 className="text-success text-center">ศาลจังหวัดสมุทรสงคราม</h1>
+        <h1 className="text-success text-center">ศาลจังหวัดสมุทรสงคราม.</h1>
         <h3 className="text-muted text-center">รวมระบบงาน เฉพาะระบบภายในศาล</h3>
       <div className="d-grid gap-3">
 
