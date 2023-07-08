@@ -47,19 +47,15 @@ const Menu = () => {
               <Nav.Link as={Link} to="/" > หน้าหลัก</Nav.Link>
             {(showUser || showOper || showAdmin) && ( 
                <NavDropdown title="ระบบงาน" id="basic-nav-dropdown">
-                <NavDropdown.Item as={Link} to="/caseECMS"> - ระบบแสกน [ตั้งต้นคดี] </NavDropdown.Item>
-                <NavDropdown.Divider />
                 <NavDropdown.Item as={Link} to="/uservocation"> - ระบบบันทึกใบลา </NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/listup"> - ระบบบันทึกรหัสผู้ใช้ </NavDropdown.Item>
+                <NavDropdown.Divider />
                 <NavDropdown.Item as={Link} to="/fillven"> - รายการเวรประจำตัว </NavDropdown.Item>
              </NavDropdown>
             )}
             { (showOper || showAdmin) && (
             <>
               <NavDropdown title="รายงาน" id="basic-nav-dropdown">
-                {/* <NavDropdown.Item href="http://10.37.76.250:9090/webETC/smkc_user/report_vs2.php" target="_blank">
-                  - รายงานสรุปวันลา(เดิม)
-                </NavDropdown.Item> */}
                 <NavDropdown.Item as={Link} to="/uservocation_st"> - รายงานสรุปวันลา </NavDropdown.Item>
               </NavDropdown>
               { showAdmin && (
@@ -81,8 +77,6 @@ const Menu = () => {
                 <NavDropdown.Item as={Link} to="/fillwitness"> - หนังสือแจ้งติดตามพยาน </NavDropdown.Item>
                 <NavDropdown.Item as={Link} to="/filldrivingli"> - หนังสือพักใช้ใบอนุญาตขับรถ </NavDropdown.Item>
                 <NavDropdown.Divider />
-                <NavDropdown.Item as={Link} to="/caseday"> - ข้อมูลคดีประจำวัน </NavDropdown.Item>
-                <NavDropdown.Item as={Link} to="/remaincase"> - ข้อมูลคดีค้าง </NavDropdown.Item>
                 <NavDropdown.Divider />
               </NavDropdown>
             </Nav>

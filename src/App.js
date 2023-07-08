@@ -10,9 +10,6 @@ import Profile from "./components/profile.component";
 import Setadmin from './components/set_admin.component';
 import EditUser from './components/edituser.component';
 import ListUP from './components/listup.component';
-import CaseDay from './components/CaseDay.component';
-import CasePost from './components/CasePost.component';
-import RemainCase from './components/RemainCase.component';
 import NoPage from './components/NoPage.component';
 
 import FillCasefinal from './components/fillcomponents/fillcasefinal.component';
@@ -25,8 +22,6 @@ import FillVen from './components/fillcomponents/fillven.component';
 
 import UserVocation from './components/UserVocation.component';
 import UserVocationSt from './components/UserVocationSt.component';
-import CaseECMS from './components/CaseECMS.component';
-import Paper from './components/paper.component';
 
 function App() {
   return (
@@ -51,9 +46,6 @@ function App() {
         <Route path="/set_admin" element={<Setadmin />} />
         <Route path="/edit" element={<EditUser />} />
         <Route path="/listup" element={<ListUP />} />
-        <Route path="/caseday" element={<CaseDay />} />
-        <Route path="/casepost" element={<CasePost />} />
-        <Route path="/remaincase" element={<RemainCase />} />
         <Route path="/fillcasefinal" element={<FillCasefinal />} />
         <Route path="/fillsocialser1" element={<FillSocialser1 />} />
         <Route path="/fillwarrant" element={<FillWarrant />} />
@@ -62,9 +54,7 @@ function App() {
         <Route path="/filldrivingli" element={<FillDrivingLi />} />
         <Route path="/uservocation" element={<UserVocation />} />
         <Route path="/uservocation_st" element={<UserVocationSt />} />
-        <Route path="/caseECMS" element={<CaseECMS />} />
         <Route path="/fillven" element={<FillVen />} />
-        <Route path="/paper" element={<Paper />} />
         <Route path="*" element={<NoPage />} />
       </Route>
     </Routes>
