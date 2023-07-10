@@ -4,6 +4,7 @@ import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import { ArrowClockwise } from 'react-bootstrap-icons';
 import Service from "../../../src/services/case160.service";
+import { convertDate } from "../../../src/services/convert_text.service";
 
 const MySwal = withReactContent(Swal);
 const URL_host = `http://${window.location.host}`;
@@ -14,6 +15,7 @@ const { register, handleSubmit, reset, setValue,  getValues } = useForm();
 const [caseresult, setCaseresult] = useState([]);
 const [zonedata1, setZonedata1] = useState(false);
 const [zonedata2, setZonedata2] = useState(false);
+const [zonedata3, setZonedata3] = useState(false);
 const [zonedata4, setZonedata4] = useState(false);
 const [zonedata5, setZonedata5] = useState(false);
 const [zonedata6, setZonedata6] = useState(false);
@@ -29,14 +31,13 @@ useEffect(()=>{
         setValue("Blackcase", caseresult.caseId.blackFullCaseName);
         setValue("Redcase", caseresult.caseId.redFullCaseName); 
         setValue("Plaintiff",caseresult.caseId.prosDesc);
-        setValue("Defendant",caseresult.caseId.accuDesc);
+        setValue("Defendant",caseresult.caseId.accuDesc || '-');
         setValue("def16",caseresult.caseId.alleDesc);
         setValue("def22",caseresult.caseId.alleDesc);
         setValue("Dateclaim",day_book);
-        setValue("Defendant_name",caseresult.caseId.accuDesc);
         setValue("def66",'ไทย');
-        setValue("def33",'รับจ้าง');
 
+        setValue("def_check2",true);
         setValue("def_check11",true);
         setValue("def_check4",true);
         setValue("def_check5",true);
@@ -79,6 +80,7 @@ const handleSearch = () => {
                     setIdresult(res.data);
                     setZonedata1(true);
                     setZonedata2(false);
+                    setZonedata3(false);
                     setZonedata4(false);
                     setZonedata5(false);
                     MySwal.close();
@@ -87,6 +89,7 @@ const handleSearch = () => {
                 MySwal.fire({ title:'ไม่พบข้อมูล',html:<div><h6>{err.message}</h6></div>,icon: 'error', timer: 3000  });
                 setZonedata1(false);
                 setZonedata2(false);
+                setZonedata3(false);
                 setZonedata4(false);
                 setZonedata5(false);
                 setIdresult([]);
@@ -109,6 +112,7 @@ const handleSearch = () => {
             setCaseresult( res );
             setZonedata1(true);
             setZonedata2(false);
+            setZonedata3(true);
             setZonedata4(false);
             setZonedata5(false);
         }).catch(error => { 
@@ -117,6 +121,7 @@ const handleSearch = () => {
             MySwal.fire({  title:'ไม่พบข้อมูลคดี', html : <div> <h6> {error.message} </h6> </div>,icon: 'error',timer: 3000  });
             setZonedata1(false);
             setZonedata2(false);
+            setZonedata3(false);
             setZonedata4(false);
             setZonedata5(false);
         });
@@ -151,55 +156,75 @@ const onSubmitdata = () => {
     }
 }
 
+const Detailclick = async (data) => {
+    if(data){
+        console.log(data);
+        let address_text;
+        let data_adrr = data.litigantAddressModel[0] || null ;
 
-// const Detailclick = (data) => {
-//     if(data){
-//         let street_fill = data.street || '';
-//         let squad_fill = data.squad || '';
-//         let alley_fill = data.alley || '';
-//         let alley2_fill = data.alley2 || '';
-//         let age_fill = data.age_def !== null && data.age_def !== undefined ? data.age_def.toString() : " ";
+        if(data_adrr && data_adrr.litigantSubdistrictId){
+            address_text = await Service.getSubdistricts(data_adrr.litigantSubdistrictId);
+        }
+        if(data.litigantBirthDate){
+            let dateComponents = convertDate(data.litigantBirthDate).date2;
+            setValue("def65", dateComponents);
+        }
 
-//         setValue("Defendant_name",data.defendant_name );
-//         setValue("def69",age_fill );
-//         setValue("def21",data.defidcard || '');
-//         setValue("def33",data.career || 'รับจ้าง');
-//         setValue("def24",data.houseno || '');
-//         setValue("def25",squad_fill);
-//         setValue("def27",street_fill);
-//         setValue("def26",alley_fill+' '+ alley2_fill);
-//         setValue("def28",data.canton || '');
-//         setValue("def29",data.district || '');
-//         setValue("def30",data.province || '');
-//         setValue("def22",data.tel || '');
-//         if(data.sex === 1){ setValue("def_check11",true); } else {  setValue("def_check12",true); }
-//     }
-// }
+        let houseno_fill = data_adrr ? data_adrr.litigantAddress || '' : '';
+        let street_fill = data_adrr ? data_adrr.litigantRoad || '' : '';
+        let squad_fill = data_adrr ? data_adrr.litigantMoo || '' : '';
+        let alley_fill = data_adrr ? data_adrr.litigantSoi || '' : '';
+        let canton_fill = address_text ? address_text.subdistrictName || '' : '';
+        let district_fill = address_text ? address_text.districtName || '' : '';
+        let province_fill = address_text ? address_text.provinceName || '' : '';
+        let post_fill = address_text ? address_text.postCode || '75000' : '';
+        let age_fill = data ? data.litigantAge || '' : '';
 
-// const CreateFillform = (props) => {
-//     let data = (props.data);
-//     if(data.length > 0){
-//     return(<>
-//     <div className='row justify-content-center '>
-//     { data.map((value, index) => ( 
-//     <div className='col-3 text-center mb-2' key={index}>
-//     <div className="card">
-//         <div className="card-header bg-primary text-light">
-//         { value.defendant_name }
-//         </div>
-//         <div className="card-body bg-light">
-//         {value.punish && <><p> กักขัง : {value.punish} แต่วันที่ : {convertDate(value.daypunish).date} </p></> }
-//         <button className="btn btn-primary"
-//         onClick={() => { Detailclick(value); setZonedata3(false); }}
-//         >เลือก</button>
-//         </div>
-//     </div>
-//     </div> ))}
-//     </div>
-//     </>);
-//     }
 
-// }
+        setValue("Defendant_name",data.litigantName );
+        setValue("def69",age_fill );
+        setValue("def33",'รับจ้าง');
+        setValue("def24",houseno_fill);
+        setValue("def25",squad_fill);
+        setValue("def27",street_fill);
+        setValue("def26",alley_fill);
+        setValue("def28",canton_fill);
+        setValue("def29",district_fill);
+        setValue("def30",province_fill);
+        setValue("def31",post_fill);
+        setValue("def21",data.litigantCardModel[0]?.litigantCard || '');
+        setValue("def22",data.litigantTelModel[0]?.litigantTel || '');
+        if(data.litigantSex === 1){ setValue("def_check11",true); } else {  setValue("def_check12",true); }
+    }
+}
+
+const CreateFillform = (props) => {
+    let data = (props.data);
+    data = data.filter((item) => item.orderNo !== 0 && item.personTypeId !== 11);
+    if(data.length > 0){
+    return(<>
+    <div className='row justify-content-center '>
+    { data.map((value, index) => ( 
+    <div className='col-3 text-center mb-2' key={index}>
+    <div className="card">
+        <div className="card-header bg-primary text-light">
+        { value.litigantName }
+        </div>
+        <div className="card-body bg-light">
+        <button className="btn btn-primary"
+            onClick={() => { 
+                Detailclick(value); 
+                setZonedata3(false); 
+            }}
+        >เลือก</button>
+        </div>
+    </div>
+    </div> ))}
+    </div>
+    </>);
+    }
+
+}
 
 const handleKeyDown = (event) => { if (event.keyCode === 13) { handleSearch(); } }
 
@@ -228,7 +253,7 @@ return (<>
       </div>
       </div>
 
-    {/* { zonedata3 && caseresult && <CreateFillform data={caseresult}/> } */}
+        { zonedata3 && caseresult.caseLit && <CreateFillform data={ caseresult.caseLit}/> }
     </div>
 
     

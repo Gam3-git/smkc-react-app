@@ -31,8 +31,18 @@ export function convertDate(dateString) {
 
   const formattedTime = time_2.toLocaleTimeString('th-TH', options2);
 
+  const options3 = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "Asia/Bangkok"
+  };
+
+  const formattedDate2 = date.toLocaleDateString('th-TH', options3);
+
   return {
     date: formattedDate,
+    date2: formattedDate2,
     time: formattedTime
   };
 }

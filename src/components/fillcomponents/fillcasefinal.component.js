@@ -13,6 +13,7 @@ const MySwal = withReactContent(Swal);
 const Fill_casefinal = () => {
 const { register, handleSubmit, setValue  } = useForm();
 const [caseresult, setCaseresult] = useState( [] );
+const [judList, setJudList] = useState( [] );
 
 useEffect(()=>{
     if(caseresult.caseId){
@@ -38,6 +39,21 @@ useEffect(()=>{
     }
 },[caseresult,setValue]);
 
+useEffect(()=>{ Service.getJudList().then(res => { setJudList(res); }).catch(err => { console.log(err); setJudList(err); }); },[]);
+
+const btn_jud = (list) => {
+
+    if (!Array.isArray(list)) {
+        return null ; 
+    }
+    return( <>
+        { list.map( (value,index) => (
+            <button className='btn btn-primary btn-sm my-1 mx-1' key={index}
+                onClick={()=>setValue("Judname",value.judgeName)}> 
+            {value.judgeName.substring(0, 15) + '....'} </button>
+        ))}
+    </>);
+}
 
 const handleSearch = () => {
     setCaseresult( [] );
@@ -134,6 +150,10 @@ return (<>
             <input type="text" className="form-control" name="Judname"  
                 {...register("Judname")} />
 
+            <label  htmlFor="Defendant_all">ข้อมูลคู่ความทั้งหมดในคดี </label>
+            <textarea  type="text" className="form-control" name="Defendant_all" rows="2"    
+                {...register("Defendant_all")} />
+
             </div>
 
 
@@ -160,15 +180,15 @@ return (<>
 
             <button className="form-control btn btn-success my-2" type="submit">สร้างเอกสาร</button>
 
-            <label  htmlFor="Defendant_all">ข้อมูลคู่ความทั้งหมดในคดี </label>
-            <textarea  type="text" className="form-control" name="Defendant_all" rows="4"    
-                {...register("Defendant_all")} />
             </div>
+
 
     </div>
     </div>
     </form>
-    
+    <div className='row justify-content-center mt-1 font-saraban'>   
+        { judList && <div className='col-12 text-center'> <p> - เลือกผู้พิพากษาลงนาม</p> { btn_jud(judList) } </div>  }
+    </div>
 
     </>) ;
 }

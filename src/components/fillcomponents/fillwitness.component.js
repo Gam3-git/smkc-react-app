@@ -12,7 +12,7 @@ const MySwal = withReactContent(Swal);
 const Fill_witness = () => {
 const { register, handleSubmit, reset, setValue, getValues   } = useForm();
 const [caseresult, setCaseresult] = useState([]);
-// const [zonedata, setZonedata] = useState(false);
+const [zonedata, setZonedata] = useState(false);
 
 useEffect(()=>{
     if( caseresult.caseId ){
@@ -24,7 +24,6 @@ useEffect(()=>{
         setValue("Defendant",caseresult.caseId.accuDesc);
         setValue("Plaint",caseresult.caseId.alleDesc);
         setValue("Defendant_all", caseresult.caseId.otherDesc );
-        setValue("Defendant_name", caseresult.caseId.accuDesc );
         setValue("appoint",'สืบพยาน' );
     } 
 },[caseresult,setValue]);
@@ -56,11 +55,11 @@ const handleSearch = () => {
             MySwal.close();
             // console.log(res);
             setCaseresult( res );
-            // setZonedata(true);
+            setZonedata(true);
         }).catch(error => { 
             console.log(error);
             setCaseresult(error);
-            // setZonedata(false);
+            setZonedata(false);
             MySwal.fire({  title:'ไม่พบข้อมูลคดี', html : <div> <h6> {error.message} </h6> </div>,icon: 'error',timer: 3000  });
   
         });
@@ -71,59 +70,67 @@ const handleSearch = () => {
 
 }
 
-// const CreateSelDef = (props) => {
-//     let data = (props.data);
-    
-//     if(data.length > 0){
-//     return( <>
-//     <div className='row justify-content-center mt-2 '>
-//     { data.map((value, index) => ( 
-//         <div className='col-3 text-center mb-2' key={index}>
-//             <div className="card">
-//                 <div className="card-header bg-warning">
-//                     { value.defendant_name }
-//                 </div>
-//                 <div className="card-body bg-light">
-//                     <h6>วันนัด : { convertDate(value.appoint_day).date }</h6>
-//                     <button className="btn btn-warning"
-//                     onClick={() => { Detailclick(value); 
-//                         // setZonedata(false);
-//                      }}
-//                     >เลือก</button>
-//                     <button className="btn btn-dark mx-1"
-//                     onClick={() => { setZonedata(false); }}
-//                     >ปิด</button>
-//                 </div>
-//             </div>
-//         </div> ))}
-//     </div>
-//     </> );
-//     }
-// }
+const CreateSelDef = (props) => {
+    let data = (props.data);
+    data = data.filter((item) => item.orderNo !== 0 && item.personTypeId !== 11);
+    if(data.length > 0){
+    return( <>
+    <div className='row justify-content-center mt-2 '>
+    { data.map((value, index) => ( 
+        <div className='col-3 text-center mb-2' key={index}>
+            <div className="card">
+                <div className="card-header bg-warning">
+                    { value.litigantName }
+                </div>
+                <div className="card-body bg-light">
+                    <button className="btn btn-warning"
+                    onClick={() => { 
+                        Detailclick(value); 
+                        // setZonedata(false);
+                     }}
+                    >เลือก</button>
+                    <button className="btn btn-dark mx-1"
+                        onClick={() => { setZonedata(false); }}
+                    >ปิด</button>
+                </div>
+            </div>
+        </div> ))}
+    </div>
+    </> );
+    }
+}
 
 
-// const Detailclick = (data) => {
-//     if(data){
-//         let street_fill = data.street || '';
-//         let squad_fill = data.squad || '';
-//         let alley_fill = data.alley || '';
-//         let alley2_fill = data.alley2 || '';
-//         let app_day = convertDate(data.appoint_day).date || '' ;
+const Detailclick = async  (data) => {
+    if(data){
+        let address_text;
+        let data_adrr = data.litigantAddressModel[0] || null ;
 
-//         setValue("Defendant_name",data.defendant_name );
-//         setValue("appoint_day",app_day );
-//         setValue("appoint_time",data.appoint_time );
-//         setValue("appoint",'สืบพยาน' );
-//         setValue("houseno",data.houseno || '');
-//         setValue("squad",squad_fill);
-//         setValue("street",street_fill);
-//         setValue("alley",alley_fill+' '+ alley2_fill);
-//         setValue("canton",data.canton || '');
-//         setValue("district",data.district || '');
-//         setValue("province",data.province || '');
-//         setValue("post",data.post || '75000');
-//     }
-// }
+        if(data_adrr && data_adrr.litigantSubdistrictId){
+            address_text = await Service.getSubdistricts(data_adrr.litigantSubdistrictId);
+        }
+
+        let houseno_fill = data_adrr ? data_adrr.litigantAddress || '' : '';
+        let street_fill = data_adrr ? data_adrr.litigantRoad || '' : '';
+        let squad_fill = data_adrr ? data_adrr.litigantMoo || '' : '';
+        let alley_fill = data_adrr ? data_adrr.litigantSoi || '' : '';
+        let canton_fill = address_text ? address_text.subdistrictName || '' : '';
+        let district_fill = address_text ? address_text.districtName || '' : '';
+        let province_fill = address_text ? address_text.provinceName || '' : '';
+        let post_fill = address_text ? address_text.postCode || '75000' : '';
+
+        setValue("Defendant_name",data.litigantName );
+        setValue("appoint",'สืบพยาน' );
+        setValue("houseno", houseno_fill);
+        setValue("squad",squad_fill);
+        setValue("street",street_fill);
+        setValue("alley",alley_fill);
+        setValue("canton",canton_fill);
+        setValue("district",district_fill);
+        setValue("province",province_fill);
+        setValue("post",post_fill);
+    }
+}
 
 
 const onSubmit = (data) => {
@@ -185,7 +192,7 @@ return (<>
             <button className='btn btn-dark mx-1' onClick={ ()=> handleSearch() } > ค้นหา </button>
         </div>
     </div>
-    {/* { zonedata && caseresult && <CreateSelDef data={caseresult}/> } */}
+    { zonedata && caseresult.caseLit && <CreateSelDef data={ caseresult.caseLit }/> }
     </div>
 
     <form onSubmit={handleSubmit(onSubmit)}>
