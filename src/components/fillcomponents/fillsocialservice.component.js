@@ -10,7 +10,7 @@ import { convertDate } from "../../../src/services/convert_text.service";
 const MySwal = withReactContent(Swal);
 const URL_host = `http://${window.location.host}`;
 
-const Fill_casefinal = () => {
+const Fill_Social = () => {
 const { register, handleSubmit, reset, setValue, getValues   } = useForm();
 const [caseresult, setCaseresult] = useState([]);
 const [zonedata1, setZonedata1] = useState(false);
@@ -936,4 +936,4 @@ return (<>
 }
 
 
-export default Fill_casefinal;
+export default Fill_Social;
