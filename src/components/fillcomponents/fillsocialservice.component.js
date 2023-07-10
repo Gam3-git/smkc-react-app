@@ -4,30 +4,21 @@ import { useForm } from "react-hook-form";
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import { ArrowClockwise } from 'react-bootstrap-icons';
-
-import Service from "../../../src/services/caseaccess.service";
-import {convertDate} from "../../../src/services/convert_text.service";
+import Service from "../../../src/services/case160.service";
 
 const MySwal = withReactContent(Swal);
 const URL_host = `http://${window.location.host}`;
 
 const Fill_casefinal = () => {
 const { register, handleSubmit, reset, setValue, getValues   } = useForm();
-const [caseresult, setCaseresult] = useState({});
-const [dbtime, setDbtime] = useState('');
+const [caseresult, setCaseresult] = useState([]);
 const [zonedata1, setZonedata1] = useState(false);
 const [zonedata2, setZonedata2] = useState(false);
-const [zonedata3, setZonedata3] = useState(false);
 const [zonedata4, setZonedata4] = useState(false);
 const [zonedata5, setZonedata5] = useState(false);
 const [searchid, setSearchid] = useState(false);
-const [idresult, setIdresult] = useState({});
+const [idresult, setIdresult] = useState([]);
 
-useEffect(()=>{
-    Service.getChk_db().then(res => {
-        setDbtime(res.data.message);
-    }).catch(err => console.error(err))
-},[]);
 
 useEffect(()=>{
     if(idresult.length > 0){
@@ -39,16 +30,18 @@ useEffect(()=>{
 },[idresult,setValue]);
 
 useEffect(()=>{
-    if(caseresult.length > 0){
-        let day_book = convertDate(new Date()).date;
-        let redcase = caseresult[0].rednum ? `${caseresult[0].casetext}${caseresult[0].rednum}/${caseresult[0].redyear}` : '-';
+    if(caseresult.caseId){
 
-        setValue("Blackcase",caseresult[0].blackcase);
-        setValue("Redcase",redcase);
+        const options = { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Bangkok" };
+        let day_book = new Date().toLocaleDateString('th-TH', options);
+
+        setValue("Blackcase", caseresult.caseId.blackFullCaseName);
+        setValue("Redcase", caseresult.caseId.redFullCaseName); 
+        setValue("Plaintiff",caseresult.caseId.prosDesc);
+        setValue("Defendant",caseresult.caseId.accuDesc);
+        setValue("def16",caseresult.caseId.alleDesc);
+        setValue("def22",caseresult.caseId.alleDesc);
         setValue("Dateclaim",day_book);
-        setValue("Plaintiff",caseresult[0].plaintiff);
-        setValue("Defendant",caseresult[0].defendant);
-        setValue("def16",caseresult[0].plaint);
         setValue("Remark_def",'ถนัดงานด้านนี้');
         setValue("def1",'ไทย');
         setValue("def2",'ไทย');
@@ -57,92 +50,90 @@ useEffect(()=>{
         setValue("def_check4",true);
         setValue("def_check5",true);
 
-        setValue("def22",caseresult[0].plaint);
         // setValue("def30",day_book); setValue("def31",day_book);
         setValue("def_check13",true);
         setValue("def_check16",true);
         setValue("def_check51",true);
+
+        setValue("Defendant_name",caseresult.caseId.accuDesc);
+        setValue("def21",caseresult.caseId.accuDesc);;
+        setValue("def2",'ไทย');
+        setValue("def3",'รับจ้าง');
+        setValue("def_check11",true);
     } 
 },[caseresult,setValue]);
 
 const handleSearch = () => {
     reset();
-    let search_input = document.getElementById('search_input').value ;
-    let text_search = search_input.length > 0 ? search_input : null ;
-    if(text_search === null){ return MySwal.fire({ title:'ระบุข้อมูลค้นหา',icon: 'error', timer: 3000  }); }
-    setCaseresult({}); setIdresult({});
-
+    setCaseresult([]); setIdresult([]);
     MySwal.fire({ html : <div>
       <ArrowClockwise style={{ animation: 'example 1s infinite'}} size={50} className='text-danger' />
       <h3> Loading... </h3> </div>, showConfirmButton: false, allowOutsideClick: false, timer: 30000 
     });
 
-    if(searchid){
-        Service.view_SocialWithCase(text_search,1)
-        .then( res =>{
-            if(res){
-                setIdresult(res.data);
-                setZonedata1(true);
-                setZonedata2(false);
-                setZonedata3(true);
-                setZonedata4(false);
-                setZonedata5(false);
-                MySwal.close();
-              } else { throw new Error(); }
-        }).catch( err => {
-            MySwal.fire({ title:'ไม่พบข้อมูล',html:<div><h6>{err.message}</h6></div>,icon: 'error', timer: 3000  });
-            setZonedata1(false);
-            setZonedata2(false);
-            setZonedata3(false);
-            setZonedata4(false);
-            setZonedata5(false);
-            setIdresult({});
-        });
-    } else {
-        Service.getSocialservice1(text_search)
-        .then( res => {
-            if(res){
-                setCaseresult(res.data);
-                setZonedata1(true);
-                setZonedata2(false);
-                setZonedata3(true);
-                setZonedata4(false);
-                setZonedata5(false);
-                MySwal.close();
-              } else { throw new Error(); }
-        }).catch( err =>{
-            MySwal.fire({ title:'ไม่พบข้อมูล',html:<div><h6>{err.message}</h6></div>,icon: 'error', timer: 3000  });
-            setZonedata1(false);
-            setZonedata2(false);
-            setZonedata3(false);
-            setZonedata4(false);
-            setZonedata5(false);
-            setCaseresult({});
-        });
-    }
-}
+    let search_input = document.getElementById('search_input').value ;
+    let caseBlack = search_input.length > 0 ? search_input : null ;
+    let id_case = searchid ? search_input : 0 ;
 
-const handleSync = () => {
-    MySwal.fire({
-        title: 'ต้องการ ซิงค์ข้อมูล ?', text:'(เพื่ออัพเดท ข้อมูลคดีล่าสุด)', showDenyButton: true, showCancelButton: false,
-        confirmButtonText: 'Sync', denyButtonText: `Don't Sync`,
-      }).then((result) => {
-        if (result.isConfirmed) {
-            MySwal.fire({ html : <div>
-            <ArrowClockwise style={{ animation: 'example 1s infinite'}} size={50} className='text-danger' />
-            <h3> Loading... </h3> </div>, showConfirmButton: false, allowOutsideClick: false, timer: 30000 });
-            Service.getSync_db().then(res => {
-                MySwal.fire({ title: res.data.message , icon: 'success',showConfirmButton: false, timer: 3000 });
-                setTimeout( ()=>  window.location.reload(),800);
-            }).catch(err => console.error(err))
-        } else if (result.isDenied) {
+    if( caseBlack.length > 0 ){
+        let Service_call
+        if(searchid){
+        Service_call = Service.view_SocialWithCase(id_case,1);
+        Service_call
+            .then( res =>{
+                if(res){
+                    setIdresult(res.data);
+                    setZonedata1(true);
+                    setZonedata2(false);
+                    setZonedata4(false);
+                    setZonedata5(false);
+                    MySwal.close();
+                } else { throw new Error(); }
+            }).catch( err => {
+                MySwal.fire({ title:'ไม่พบข้อมูล',html:<div><h6>{err.message}</h6></div>,icon: 'error', timer: 3000  });
+                setZonedata1(false);
+                setZonedata2(false);
+                setZonedata4(false);
+                setZonedata5(false);
+                setIdresult([]);
+            });
+        } else {
+
+            let TopicCase = caseBlack.match(/[ก-๙a-zA-Z.\s]+/);
+            if (!TopicCase) { MySwal.fire({ title: 'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return; }
+            TopicCase = TopicCase[0].trim();
+            let numCase = caseBlack.match(/\d+/g);
+            if (numCase) { numCase = [TopicCase, ...numCase]; } 
+            else { MySwal.fire({ title: 'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return; }
+            if (numCase.length !== 3) { MySwal.fire({ title: 'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return; }
+            if (numCase[2].length !== 4) { MySwal.fire({ title: 'ระบุปี 4 หลัก', icon: 'error', timer: 3000 }); return; }
+
+        Service_call = Service.getSearchCase( numCase, 1 );
+        Service_call.then(res => { 
             MySwal.close();
+            // console.log(res);
+            setCaseresult( res );
+            setZonedata1(true);
+            setZonedata2(false);
+            setZonedata4(false);
+            setZonedata5(false);
+        }).catch(error => { 
+            console.log(error);
+            setCaseresult(error);
+            MySwal.fire({  title:'ไม่พบข้อมูลคดี', html : <div> <h6> {error.message} </h6> </div>,icon: 'error',timer: 3000  });
+            setZonedata1(false);
+            setZonedata2(false);
+            setZonedata4(false);
+            setZonedata5(false);
+        });
         }
-      })
 
-
-
+      } else { 
+        MySwal.fire({ title:'กรุณาระบุเลขคดี', icon:'question', width:'20%', showConfirmButton: false, timer: 3000 });
+        setCaseresult([]);
+      }
 }
+
 
 const onSubmit = (data) => {
     // console.log(data);
@@ -190,66 +181,63 @@ const onSubmitdata4 = () => {
     }
 }
 
-const Detailclick = (data) => {
+// const Detailclick = (data) => {
     
-    if(data){
-        let street_fill = data.street || '';
-        let squad_fill = data.squad || '';
-        let alley_fill = data.alley || '';
-        let alley2_fill = data.alley2 || '';
-        let age_fill = data.age_def !== null && data.age_def !== undefined ? data.age_def.toString() : " ";
+//     if(data){
+//         let street_fill = data.street || '';
+//         let squad_fill = data.squad || '';
+//         let alley_fill = data.alley || '';
+//         let alley2_fill = data.alley2 || '';
+//         let age_fill = data.age_def !== null && data.age_def !== undefined ? data.age_def.toString() : " ";
 
-        setValue("Defendant_name",data.defendant_name);
-        setValue("def7",age_fill);
-        setValue("def2",data.nation || 'ไทย');
-        setValue("def3",data.career || 'รับจ้าง');
-        setValue("def8",data.houseno || '');
-        setValue("def8_2",squad_fill);
-        setValue("def9",street_fill);
-        setValue("def10",alley_fill+' '+ alley2_fill);
-        setValue("def11",data.canton || '');
-        setValue("def12",data.district || '');
-        setValue("def13",data.province || '');
-        setValue("def14",data.tel || '');
-        setValue("def21",data.defendant_name);
-        if(data.sex === 1){ setValue("def_check11",true); } else {  setValue("def_check12",true); }
-    }
-}
+//         setValue("Defendant_name",data.defendant_name);
+//         setValue("def7",age_fill);
+//         setValue("def2",data.nation || 'ไทย');
+//         setValue("def3",data.career || 'รับจ้าง');
+//         setValue("def8",data.houseno || '');
+//         setValue("def8_2",squad_fill);
+//         setValue("def9",street_fill);
+//         setValue("def10",alley_fill+' '+ alley2_fill);
+//         setValue("def11",data.canton || '');
+//         setValue("def12",data.district || '');
+//         setValue("def13",data.province || '');
+//         setValue("def14",data.tel || '');
+//         setValue("def21",data.defendant_name);
+//         if(data.sex === 1){ setValue("def_check11",true); } else {  setValue("def_check12",true); }
+//     }
+// }
 
-const CreateFillform = (props) => {
-    let data = (props.data);
+// const CreateFillform = (props) => {
+//     let data = (props.data);
 
-    if(data.length > 0){
-    return(<>
-    <div className='row justify-content-center '>
-    { data.map((value, index) => ( 
-    <div className='col-3 text-center mb-2' key={index}>
-    <div className="card">
-        <div className="card-header bg-primary text-light">
-        { value.defendant_name }
-        </div>
-        <div className="card-body bg-light">
-        {value.punish && <><p> กักขัง : {value.punish} แต่วันที่ : {convertDate(value.daypunish).date} </p></> }
-        <button className="btn btn-primary"
-        onClick={() => { Detailclick(value); setZonedata3(false); }}
-        >เลือก</button>
-        </div>
-    </div>
-    </div> ))}
-    </div>
-    </>);
-    }
+//     if(data.length > 0){
+//     return(<>
+//     <div className='row justify-content-center '>
+//     { data.map((value, index) => ( 
+//     <div className='col-3 text-center mb-2' key={index}>
+//     <div className="card">
+//         <div className="card-header bg-primary text-light">
+//         { value.defendant_name }
+//         </div>
+//         <div className="card-body bg-light">
+//         {value.punish && <><p> กักขัง : {value.punish} แต่วันที่ : {convertDate(value.daypunish).date} </p></> }
+//         <button className="btn btn-primary"
+//         onClick={() => { Detailclick(value); setZonedata3(false); }}
+//         >เลือก</button>
+//         </div>
+//     </div>
+//     </div> ))}
+//     </div>
+//     </>);
+//     }
 
-}
+// }
 
 const handleKeyDown = (event) => { if (event.keyCode === 13) { handleSearch(); } }
 
 return (<>
 
     <div className='row justify-content-center mt-3 font-saraban'>
-    <div className='col-1'>
-        <button className='btn btn-outline-warning mt-3' onClick={ ()=> handleSync() } > ซิงค์ข้อมูล </button>
-    </div>
     <div className='col-1'>
         <a className='btn btn-outline-dark mt-3' 
         href={`${URL_host}/smkc-react-app/fillwarrant/view_ss?type_id=1`} target="_blank" rel="noopener noreferrer">
@@ -260,7 +248,7 @@ return (<>
         onClick={ ()=>{ setSearchid(!searchid) } }
         > { searchid ? 'ค้นหา คดีดำ' : 'ค้นหาด้วย ID'} </button>
     </div>
-    <div className='col-5 text-center'>
+    <div className='col-5 text-center mb-2'>
         <h4>หนังสือบริการสังคมแทนค่าปรับ คำร้อง บ.ส.1 และ บ.ส.2 </h4>
       <div className="input-group">
         <div className="input-group-prepend">
@@ -270,14 +258,10 @@ return (<>
         onKeyDown={handleKeyDown} id="search_input" />
         <button className='btn btn-dark mx-1' onClick={ ()=> handleSearch() } > ค้นหา </button>
       </div>
-      { dbtime ?  <h6 className='text-muted mt-2'>{ dbtime }</h6>  : <h6 className='text-muted mt-2'>-</h6> } 
       </div>
 
-    { zonedata3 && caseresult && <CreateFillform data={caseresult}/> }
+    {/* { zonedata3 && caseresult && <CreateFillform data={caseresult}/> } */}
     </div>
-
-    
-
     
     <form onSubmit={handleSubmit(onSubmit)}>
     <div className="form-group">

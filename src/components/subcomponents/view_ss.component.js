@@ -1,6 +1,6 @@
 import { useState,useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import Service from "../../../src/services/caseaccess.service";
+import Service from "../../../src/services/case160.service";
 import { convertDate } from "../../../src/services/convert_text.service";
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content';

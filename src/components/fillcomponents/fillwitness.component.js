@@ -4,105 +4,126 @@ import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import { ArrowClockwise } from 'react-bootstrap-icons';
 
-import Service from "../../../src/services/caseaccess.service";
-import {convertDate} from "../../../src/services/convert_text.service";
+import Service from "../../../src/services/case160.service";
+// import {convertDate} from "../../../src/services/convert_text.service";
 
 const MySwal = withReactContent(Swal);
 
 const Fill_witness = () => {
 const { register, handleSubmit, reset, setValue, getValues   } = useForm();
-const [caseresult, setCaseresult] = useState({});
-const [zonedata, setZonedata] = useState(false);
+const [caseresult, setCaseresult] = useState([]);
+// const [zonedata, setZonedata] = useState(false);
 
 useEffect(()=>{
-    if(caseresult.length > 0){
-        let day_book = convertDate(new Date()).date;
+    if( caseresult.caseId ){
+        const options = { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Bangkok" };
+        let day_book = new Date().toLocaleDateString('th-TH', options);
         setValue("Daybook",day_book);
-        setValue("Blackcase",caseresult[0].blackcase);
-        setValue("Plaintiff",caseresult[0].plaintiff);
-        setValue("Defendant",caseresult[0].defendant);
-        setValue("Plaint",caseresult[0].plaint);
+        setValue("Blackcase", caseresult.caseId.blackFullCaseName);
+        setValue("Plaintiff",caseresult.caseId.prosDesc);
+        setValue("Defendant",caseresult.caseId.accuDesc);
+        setValue("Plaint",caseresult.caseId.alleDesc);
+        setValue("Defendant_all", caseresult.caseId.otherDesc );
+        setValue("Defendant_name", caseresult.caseId.accuDesc );
+        setValue("appoint",'สืบพยาน' );
     } 
 },[caseresult,setValue]);
 
 const handleSearch = () => {
     reset();
-    let search_input = document.getElementById('search_input').value ;
-    let text_search = search_input.length > 0 ? search_input : null ;
-    if(text_search === null){ return MySwal.fire({ title:'ระบุข้อมูลค้นหา',icon: 'error', timer: 3000  }); }
-    setCaseresult({}); 
-
+    setCaseresult([]); 
     MySwal.fire({ html : <div>
       <ArrowClockwise style={{ animation: 'example 1s infinite'}} size={50} className='text-danger' />
       <h3> Loading... </h3> </div>, showConfirmButton: false, allowOutsideClick: false, timer: 30000 
     });
 
-     Service.getWitness(text_search).then( res => {
-        if(res){
-            setCaseresult(res.data);
-            setZonedata(true);
+    let search_input = document.getElementById('search_input').value ;
+    let caseBlack = search_input.length > 0 ? search_input : null ;
+    if( caseBlack === null){ return MySwal.fire({ title:'ระบุข้อมูลค้นหา',icon: 'error', timer: 3000  }); }
+    if( caseBlack.length > 0 ){
+        let TopicCase = caseBlack.match(/[ก-๙a-zA-Z.\s]+/)[0].trim();
+        let numCase = caseBlack.match(/\d+/g);
+        if (numCase) {
+          numCase = [TopicCase, ...numCase];
+        } else {
+          MySwal.fire({ title:'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return;
+        }
+        if(numCase.length !== 3){ MySwal.fire({ title:'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return; }
+        if(numCase[2].length !== 4){ MySwal.fire({ title:'ระบุปี 4 หลัก', icon: 'error', timer: 3000 }); return; }
+
+        let Service_call = Service.getSearchCase( numCase, 1 ); 
+        Service_call.then(res => { 
             MySwal.close();
-        } else { throw new Error(); }
-        }).catch( err =>{
-            MySwal.fire({ title:'ไม่พบข้อมูล',html:<div><h6>{err.message}</h6></div>,icon: 'error', timer: 3000  });
-            setCaseresult({});
-            setZonedata(false);
+            // console.log(res);
+            setCaseresult( res );
+            // setZonedata(true);
+        }).catch(error => { 
+            console.log(error);
+            setCaseresult(error);
+            // setZonedata(false);
+            MySwal.fire({  title:'ไม่พบข้อมูลคดี', html : <div> <h6> {error.message} </h6> </div>,icon: 'error',timer: 3000  });
+  
         });
+      } else { 
+        MySwal.fire({ title:'กรุณาระบุเลขคดี', icon:'question', width:'20%', showConfirmButton: false, timer: 3000 });
+        setCaseresult([]);
+      }
+
 }
 
-const CreateSelDef = (props) => {
-    let data = (props.data);
+// const CreateSelDef = (props) => {
+//     let data = (props.data);
     
-    if(data.length > 0){
-    return( <>
-    <div className='row justify-content-center mt-2 '>
-    { data.map((value, index) => ( 
-        <div className='col-3 text-center mb-2' key={index}>
-            <div className="card">
-                <div className="card-header bg-warning">
-                    { value.defendant_name }
-                </div>
-                <div className="card-body bg-light">
-                    <h6>วันนัด : { convertDate(value.appoint_day).date }</h6>
-                    <button className="btn btn-warning"
-                    onClick={() => { Detailclick(value); 
-                        // setZonedata(false);
-                     }}
-                    >เลือก</button>
-                    <button className="btn btn-dark mx-1"
-                    onClick={() => { setZonedata(false); }}
-                    >ปิด</button>
-                </div>
-            </div>
-        </div> ))}
-    </div>
-    </> );
-    }
+//     if(data.length > 0){
+//     return( <>
+//     <div className='row justify-content-center mt-2 '>
+//     { data.map((value, index) => ( 
+//         <div className='col-3 text-center mb-2' key={index}>
+//             <div className="card">
+//                 <div className="card-header bg-warning">
+//                     { value.defendant_name }
+//                 </div>
+//                 <div className="card-body bg-light">
+//                     <h6>วันนัด : { convertDate(value.appoint_day).date }</h6>
+//                     <button className="btn btn-warning"
+//                     onClick={() => { Detailclick(value); 
+//                         // setZonedata(false);
+//                      }}
+//                     >เลือก</button>
+//                     <button className="btn btn-dark mx-1"
+//                     onClick={() => { setZonedata(false); }}
+//                     >ปิด</button>
+//                 </div>
+//             </div>
+//         </div> ))}
+//     </div>
+//     </> );
+//     }
+// }
 
-}
 
-const Detailclick = (data) => {
-    if(data){
-        let street_fill = data.street || '';
-        let squad_fill = data.squad || '';
-        let alley_fill = data.alley || '';
-        let alley2_fill = data.alley2 || '';
-        let app_day = convertDate(data.appoint_day).date || '' ;
+// const Detailclick = (data) => {
+//     if(data){
+//         let street_fill = data.street || '';
+//         let squad_fill = data.squad || '';
+//         let alley_fill = data.alley || '';
+//         let alley2_fill = data.alley2 || '';
+//         let app_day = convertDate(data.appoint_day).date || '' ;
 
-        setValue("Defendant_name",data.defendant_name );
-        setValue("appoint_day",app_day );
-        setValue("appoint_time",data.appoint_time );
-        setValue("appoint",'สืบพยาน' );
-        setValue("houseno",data.houseno || '');
-        setValue("squad",squad_fill);
-        setValue("street",street_fill);
-        setValue("alley",alley_fill+' '+ alley2_fill);
-        setValue("canton",data.canton || '');
-        setValue("district",data.district || '');
-        setValue("province",data.province || '');
-        setValue("post",data.post || '75000');
-    }
-}
+//         setValue("Defendant_name",data.defendant_name );
+//         setValue("appoint_day",app_day );
+//         setValue("appoint_time",data.appoint_time );
+//         setValue("appoint",'สืบพยาน' );
+//         setValue("houseno",data.houseno || '');
+//         setValue("squad",squad_fill);
+//         setValue("street",street_fill);
+//         setValue("alley",alley_fill+' '+ alley2_fill);
+//         setValue("canton",data.canton || '');
+//         setValue("district",data.district || '');
+//         setValue("province",data.province || '');
+//         setValue("post",data.post || '75000');
+//     }
+// }
 
 
 const onSubmit = (data) => {
@@ -117,7 +138,6 @@ const onSubmit = (data) => {
     }).catch(err => console.error(err))
 
 }
-
 const onSubmitdata2 = () =>{
     const data = getValues();
     MySwal.fire({ html : <div>
@@ -165,7 +185,7 @@ return (<>
             <button className='btn btn-dark mx-1' onClick={ ()=> handleSearch() } > ค้นหา </button>
         </div>
     </div>
-    { zonedata && caseresult && <CreateSelDef data={caseresult}/> }
+    {/* { zonedata && caseresult && <CreateSelDef data={caseresult}/> } */}
     </div>
 
     <form onSubmit={handleSubmit(onSubmit)}>
@@ -272,6 +292,9 @@ return (<>
                             {...register("post")} />
 
                     </div>
+                    <label  htmlFor="Defendant_all">ข้อมูลคู่ความทั้งหมดในคดี </label>
+                        <textarea  type="text" className="form-control" name="Defendant_all" rows="4"    
+                        {...register("Defendant_all")} />
                 </div>
 
             </div>

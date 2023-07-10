@@ -4,71 +4,78 @@ import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import { ArrowClockwise } from 'react-bootstrap-icons';
 
-import Service from "../../../src/services/caseaccess.service";
-import {convertDate} from "../../../src/services/convert_text.service";
+import Service from "../../../src/services/case160.service";
+import { convertDate } from "../../../src/services/convert_text.service";
 
 const MySwal = withReactContent(Swal);
 
 const Fill_driving_li = () => {
     const { register, handleSubmit, reset, setValue } = useForm();
     const [caseresult, setCaseresult] = useState([]);
-    const [bookname, setBookname] = useState([]);
+
 
 useEffect(()=>{
-    Service.getBookNameFind().then( res => {
-        setBookname(res.data);
-    }).catch( err => console.log(err.message));
-},[]);
-
-useEffect(()=>{
-    if(caseresult.length > 0){
-        let day_book = convertDate(new Date()).date;
+    if( caseresult.caseId ){
+        
+        const options = { year: "numeric", month: "long", day: "numeric", timeZone: "Asia/Bangkok" };
+        
+        let day_book = new Date().toLocaleDateString('th-TH', options);
         let dd = day_book.split(' ');
         day_book = `วันที่  ${dd[0]}  เดือน  ${dd[1]}  พ.ศ.  ${dd[2]} `;
-        let day_decide = convertDate( caseresult[0].date_decide ).date;
-        let redcase = caseresult[0].rednum ? `${caseresult[0].casetext}${caseresult[0].rednum}/${caseresult[0].redyear}` : '-';
+
+        let day_decide = convertDate( caseresult.caseRed.judgeDate ).date;
         let detail_text = `คดีนี้ ศาลมีคำสั่งให้พักใช้ใบอนุญาตขับขี่รถของจำเลย มีกำหนด 6 เดือน นับแต่วันที่ ${day_decide} เป็นต้นไป รายละเอียดใบอนุญาตขับรถปรากฏตามสิ่งที่ส่งมาด้วย`;
 
         setValue("Daybook",day_book);
-        setValue("Blackcase",caseresult[0].blackcase);
-        setValue("Redcase",redcase); 
-        setValue("Plaintiff",caseresult[0].plaintiff);
-        setValue("Defendant",caseresult[0].defendant);
-        setValue("Plaint",caseresult[0].plaint);
+        setValue("Blackcase", caseresult.caseId.blackFullCaseName);
+        setValue("Redcase", caseresult.caseId.redFullCaseName); 
+        setValue("Plaintiff",caseresult.caseId.prosDesc);
+        setValue("Defendant",caseresult.caseId.accuDesc);
+        setValue("Plaint",caseresult.caseId.alleDesc);
         setValue("book_detail",detail_text );
         setValue("Topic",'แจ้งคำสั่งพักใช้ใบอนุญาตขับรถ');
         setValue("Sendto",'ขนส่งจังหวัดสมุทรสงคราม');
         setValue("book_p1",'สำเนาใบอนุญาตขับรถยนต์ส่วนบุคคล');
-        setValue("book_p2",`ของ ${caseresult[0].defendant} จำนวน 1 ฉบับ`);
-
-        setValue("book_name",bookname[16].book_name || null );
-        setValue("book_posi1",bookname[16].book_posi1 || null );
-        setValue("book_posi2",bookname[16].book_posi2 || null );
-        
+        setValue("book_p2",`ของ ${caseresult.caseId.accuDesc} จำนวน 1 ฉบับ`);
     } 
-},[ bookname,caseresult,setValue ]);
+},[ caseresult,setValue ]);
 
 const handleSearch = () => {
     reset();
-    let search_input = document.getElementById('search_input').value ;
-    let text_search = search_input.length > 0 ? search_input : null ;
-    if(text_search === null){ return MySwal.fire({ title:'ระบุข้อมูลค้นหา',icon: 'error', timer: 3000  }); }
     setCaseresult([]); 
-
     MySwal.fire({ html : <div>
       <ArrowClockwise style={{ animation: 'example 1s infinite'}} size={50} className='text-danger' />
       <h3> Loading... </h3> </div>, showConfirmButton: false, allowOutsideClick: false, timer: 30000 
     });
+    let search_input = document.getElementById('search_input').value ;
+    let caseBlack = search_input.length > 0 ? search_input : null ;
+    if( caseBlack === null){ return MySwal.fire({ title:'ระบุข้อมูลค้นหา',icon: 'error', timer: 3000  }); }
+    if( caseBlack.length > 0 ){
+        let TopicCase = caseBlack.match(/[ก-๙a-zA-Z.\s]+/)[0].trim();
+        let numCase = caseBlack.match(/\d+/g);
+        if (numCase) {
+          numCase = [TopicCase, ...numCase];
+        } else {
+          MySwal.fire({ title:'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return;
+        }
+        if(numCase.length !== 3){ MySwal.fire({ title:'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return; }
+        if(numCase[2].length !== 4){ MySwal.fire({ title:'ระบุปี 4 หลัก', icon: 'error', timer: 3000 }); return; }
 
-     Service.getSocialservice1(text_search).then( res => {
-        if(res){
-            setCaseresult(res.data);
+        let Service_call = Service.getSearchCase( numCase, 1 ); 
+        Service_call.then(res => { 
             MySwal.close();
-        } else { throw new Error(); }
-        }).catch( err =>{
-            MySwal.fire({ title:'ไม่พบข้อมูล',html:<div><h6>{err.message}</h6></div>,icon: 'error', timer: 3000  });
-            setCaseresult([]);
+            // console.log(res);
+            setCaseresult( res );
+        }).catch(error => { 
+            console.log(error);
+            setCaseresult(error);
+            MySwal.fire({  title:'ไม่พบข้อมูลคดี', html : <div> <h6> {error.message} </h6> </div>,icon: 'error',timer: 3000  });
+  
         });
+      } else { 
+        MySwal.fire({ title:'กรุณาระบุเลขคดี', icon:'question', width:'20%', showConfirmButton: false, timer: 3000 });
+        setCaseresult([]);
+      }
 }
 
 const onSubmit = (data) => {
@@ -113,42 +120,7 @@ const book_p1_set = () => {
         </>
         ,showConfirmButton: false, width:'80%', });
 }
-const book_name_set = () => {
 
-    const butt_click = (value) =>{
-        setValue("book_name",value.book_name );
-        setValue("book_posi1",value.book_posi1 );
-        setValue("book_posi2",value.book_posi2 );
-        MySwal.close();
-    }
-
-    if(bookname.length > 0){
-    MySwal.fire({ title:'เลือกผู้ลงนาม',
-        html:<>
-        <div className="table-responsive">
-            <table className="table table-bordered table-sm">
-            <thead><tr>
-                <th scope="col">#</th>
-                <th scope="col" style={{width:"30%"}} >ชื่อ - สกุล</th>
-                <th scope="col">ตำแหน่ง</th>
-                <th scope="col">ตำแหน่ง (แทน)</th>
-                <th scope="col">หมายเหตุ</th>
-            </tr></thead>
-            <tbody>
-            {bookname.map((value, index) => ( <tr key={index} >
-                <th scope="row"> {index + 1} </th>
-                <td> {value.book_name} </td>
-                <td> {value.book_posi1 ? value.book_posi1.substring(0, 15) + '....' : null} </td>
-                <td> {value.book_posi2 ? value.book_posi2.substring(0, 15) + '....' : null} </td>
-                <td> <button className='btn btn-dark' onClick={()=>butt_click(value)}>เลือก</button> </td>
-            </tr> ))}
-            </tbody>
-            </table>
-        </div>
-        </>
-        ,showConfirmButton: false, width:'80%', });
-    } else { MySwal.fire({ title:'ไม่พบข้อมูล',icon: 'error', timer: 3000  }); }
-}
 
 return (<>
     <div className='row justify-content-center mt-3 font-saraban'>
@@ -234,8 +206,6 @@ return (<>
                     </div>
                     <div className='col-5 mt-2'>
                         <label htmlFor="book_name">ลงนามหนังสือ</label>
-                        <button className="btn btn-outline-dark btn-sm mx-1" type="button"
-                            onClick={ ()=>book_name_set()} >[เลือก]</button>
                         <input  type="text" className="form-control" name="book_name"    
                         {...register("book_name")} />
                     </div>

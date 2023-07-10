@@ -5,76 +5,77 @@ import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 import { ArrowClockwise } from 'react-bootstrap-icons';
 
-import Service from "../../../src/services/caseaccess.service";
+import Service from "../../../src/services/case160.service";
 import {convertDate} from "../../../src/services/convert_text.service";
 
 const MySwal = withReactContent(Swal);
 
 const Fill_casefinal = () => {
 const { register, handleSubmit, setValue  } = useForm();
-const [caseresult, setCaseresult] = useState({});
-const [judlist, setJudlist] = useState([]);
+const [caseresult, setCaseresult] = useState( [] );
 
-
-useEffect(()=>{ Service.getJud_List().then(res => setJudlist(res)).catch(err => console.log(err)); },[]);
 useEffect(()=>{
-    if(caseresult.blackcase){
+    if(caseresult.caseId){
         let lastword = 'บัดนี้คดีได้ถึงที่สุดแล้ว จึงได้ออกหนังสือสำคัญฉบับนี้ไว้เพื่อเป็นหลักฐาน';
-        let Datedecide = convertDate(caseresult.date_decide).date;
-        let d = convertDate(new Date()).date;
-        let Day_arr = d.split(" ");
+        let Datedecide = convertDate(caseresult.caseRed.judgeDate).date;
+        let Day_arr = Datedecide.split(" ");
 
-        setValue("Casetype",caseresult.casetype);
-        setValue("Blackcase",caseresult.blacknum);
-        setValue("Redcase",`${caseresult.casetext}${caseresult.rednum}/${caseresult.redyear}`);
+        switch(caseresult.caseBlack.caseTypeId){
+            case 1 : setValue("Casetype", "อาญา"); break;
+            case 2 : setValue("Casetype", "แพ่ง"); break;
+            default : setValue("Casetype", "อาญา");
+        }
+
+        setValue("Blackcase",caseresult.caseId.blackFullCaseName);
+        setValue("Redcase",caseresult.caseId.redFullCaseName ? caseresult.caseId.redFullCaseName : "-" );
         setValue("Datedecide",Datedecide);
-        setValue("Plaint",caseresult.plaint);
-        setValue("Plaintiff",caseresult.plaintiff);
-        setValue("Defendant",caseresult.defendant);
+        setValue("Plaint",caseresult.caseId.alleDesc);
+        setValue("Plaintiff",caseresult.caseId.prosDesc);
+        setValue("Defendant",caseresult.caseId.accuDesc);
         setValue("Datebook",`วันที่ ${Day_arr[0]} เดือน ${Day_arr[1]} พุทธศักราช ${Day_arr[2]}`);
-        setValue("Lastremark",`${caseresult.succ_remark} ${Datedecide} ${lastword}`);
-        // console.log(caseresult);
+        setValue("Lastremark",`ศาลชั้นต้นมีคำสั่ง ${Datedecide} ${lastword}`);
+        setValue("Defendant_all", caseresult.caseId.otherDesc );
     }
 },[caseresult,setValue]);
 
-const btn_jud = (list) => {
-
-    if (!Array.isArray(list)) {
-        return null ; 
-    }
-    return( <>
-        { list.map( (value,index) => (
-            <button className='btn btn-primary btn-sm my-1 mx-1' key={index}
-            onClick={()=>setValue("Judname",value)}> 
-            {/* {value} </button> */}
-            {value.substring(0, 15) + '....'} </button>
-        ))}
-    </>);
-}
 
 const handleSearch = () => {
-    let search_input = document.getElementById('search_input').value ;
-    let text_search = search_input.length > 0 ? search_input : null ;
-    setCaseresult({});
-
+    setCaseresult( [] );
     MySwal.fire({ html : <div>
       <ArrowClockwise style={{ animation: 'example 1s infinite'}} size={50} className='text-danger' />
       <h3> Loading... </h3> </div>, showConfirmButton: false, allowOutsideClick: false, timer: 30000 
     });
 
-    Service.getCerJud(text_search)
-    .then( res => {
-        if(res){
-            setCaseresult(res.data);
+    let search_input = document.getElementById('search_input').value ;
+    let caseBlack = search_input.length > 0 ? search_input : null ;
+    
+    if( caseBlack.length > 0 ){
+        let TopicCase = caseBlack.match(/[ก-๙a-zA-Z.\s]+/)[0].trim();
+        let numCase = caseBlack.match(/\d+/g);
+        if (numCase) {
+          numCase = [TopicCase, ...numCase];
+        } else {
+          MySwal.fire({ title:'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return;
+        }
+        if(numCase.length !== 3){ MySwal.fire({ title:'ไม่พบข้อมูลคดี', icon: 'error', timer: 3000 }); return; }
+        if(numCase[2].length !== 4){ MySwal.fire({ title:'ระบุปี 4 หลัก', icon: 'error', timer: 3000 }); return; }
+
+        let Service_call = Service.getSearchCase( numCase, 1 ); 
+        Service_call.then(res => { 
             MySwal.close();
-          } else {
-            MySwal.fire({ title:'ไม่พบข้อมูล',icon: 'error', timer: 3000  });
-            setCaseresult({});
-          }
-    }).catch( err =>{
-        setCaseresult({});
-        MySwal.fire({ title:'ไม่พบข้อมูล',html:<div><h6>{err.message}</h6></div>,icon: 'error', timer: 3000  });
-    });
+            // console.log(res);
+            setCaseresult( res );
+        }).catch(error => { 
+            console.log(error);
+            setCaseresult(error);
+            MySwal.fire({  title:'ไม่พบข้อมูลคดี', html : <div> <h6> {error.message} </h6> </div>,icon: 'error',timer: 3000  });
+  
+        });
+      } else { 
+        MySwal.fire({ title:'กรุณาระบุเลขคดี', icon:'question', width:'20%', showConfirmButton: false, timer: 3000 });
+        setCaseresult([]);
+      }
+
 }
 
 const onSubmit = (data) => {
@@ -99,8 +100,9 @@ return (<>
         <div className="input-group-prepend">
           <span className="input-group-text">ระบุเลขคดีดำ</span>
         </div>
-        <input type="text" className="form-control" style={{ textAlign: 'center' }} 
-        onKeyDown={handleKeyDown} id="search_input" />
+        <input type="text" className="form-control" 
+            style={{ textAlign: 'center' }} 
+            onKeyDown={handleKeyDown} id="search_input" />
         <button className='btn btn-dark mx-1' onClick={ ()=> handleSearch() } > ค้นหา </button>
       </div>
       </div>
@@ -156,21 +158,17 @@ return (<>
             <textarea  type="text" className="form-control" name="Lastremark" rows="3"    
                 {...register("Lastremark")} />
 
-            <button className="form-control btn btn-success mt-2" type="submit">สร้างเอกสาร</button>
+            <button className="form-control btn btn-success my-2" type="submit">สร้างเอกสาร</button>
+
+            <label  htmlFor="Defendant_all">ข้อมูลคู่ความทั้งหมดในคดี </label>
+            <textarea  type="text" className="form-control" name="Defendant_all" rows="4"    
+                {...register("Defendant_all")} />
             </div>
 
     </div>
     </div>
     </form>
     
-    <div className='row justify-content-center mt-1 font-saraban'>
-     { judlist.data && 
-         <div className='col-12 text-center'>
-            <p> - เลือกผู้พิพากษาลงนาม</p>
-             {btn_jud(judlist.data)}
-         </div> 
-     }
-    </div>
 
     </>) ;
 }

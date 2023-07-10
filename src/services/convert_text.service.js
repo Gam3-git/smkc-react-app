@@ -1,76 +1,61 @@
-
 export function convertDate(dateString) {
 
-    if(dateString === '1970-01-01T00:00:00Z' || dateString === '1899-11-29T17:17:56.000Z'){
-      return {
-        date: null,
-        time: null
-      };
-    }
+  if(dateString === null){ return { date: '-', time: '-' } ;}
   
-    const date = new Date(dateString);
-    const options = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    };
-  
-    const formattedDate = date.toLocaleDateString('th-TH', options);
-  
-    const options2 = {
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric'
-    };
-  
-    const formattedTime = date.toLocaleTimeString('th-TH', options2);
+  const dateParts = dateString.split(" ")[0].split("/");
+  const year = parseInt(dateParts[2], 10) - 543; // Convert to Buddhist era (BE)
+  const month = parseInt(dateParts[1], 10) - 1; // Months are zero-based
+  const day = parseInt(dateParts[0], 10);
+  const date = new Date(year, month, day);
 
-    const options3 = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    };
-  
-    const formattedweekDate = date.toLocaleDateString('th-TH', options3);
+  if (isNaN(date)) { return { date: '-', time: '-' }; }
 
-    return {
-      date: formattedDate,
-      week: formattedweekDate,
-      time: formattedTime
-    };
-}
-
-export function convertDate_s(dateString) {
-
-  if(dateString === '1970-01-01T00:00:00Z' || dateString === '1899-11-29T17:17:56.000Z'|| dateString === '0000-00-00'){
-    return {
-      date: null,
-      time: null
-    };
-  }
-
-  const date = new Date(dateString);
   const options = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Asia/Bangkok"
   };
 
   const formattedDate = date.toLocaleDateString('th-TH', options);
 
+  const timeString = dateString.split(" ")[1];
+  const time_2 = new Date(`2000-01-01T${timeString}`);
   const options2 = {
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric'
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Bangkok"
   };
 
-  const formattedTime = date.toLocaleTimeString('th-TH', options2);
+  const formattedTime = time_2.toLocaleTimeString('th-TH', options2);
 
   return {
     date: formattedDate,
     time: formattedTime
   };
+}
+
+export function convertDate_s(dateString) {
+
+if(dateString === null){ return '-' ;}
+const dateParts = dateString.split(" ")[0].split("/");
+const year = parseInt(dateParts[2], 10) - 543; // Convert to Buddhist era (BE)
+const month = parseInt(dateParts[1], 10) - 1; // Months are zero-based
+const day = parseInt(dateParts[0], 10);
+const date = new Date(year, month, day);
+
+if (isNaN(date)) { return '-'; }
+
+const options = {
+  year: "numeric",
+  month: "short",
+  day: "numeric",
+  timeZone: "Asia/Bangkok"
+};
+const formattedDate = date.toLocaleDateString('th-TH', options);
+return formattedDate;
 }
 
 export function convertTimeAppoint(timeString) {
